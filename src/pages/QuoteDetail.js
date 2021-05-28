@@ -1,10 +1,14 @@
-import React from 'react'
+import {React, Fragment }from 'react';
+import { useParams} from 'react-router-dom'
 
 export const QuoteDetail = () => {
+
+    const params = useParams();
     return (
-        <div>
+        <Fragment>
             <h2>Quote Detail page</h2>
-        </div>
+            <p>{params.quoteId}</p>
+        </Fragment>
     )
 }
 
