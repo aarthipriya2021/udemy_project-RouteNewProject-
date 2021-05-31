@@ -1,32 +1,56 @@
-import {React, Fragment }from 'react';
-import { useParams, Route} from 'react-router-dom'
+import React, { Fragment, useEffect }from 'react';
+import { useParams, Route, Link, useRouteMatch} from 'react-router-dom'
+
 import Comments from '../components/comments/Comments';
 import HighLightedQuote from '../components/quotes/HighlightedQuote';
-
-const DUMMY_DATA = [
-    {id: 'q1', author: 'Max', text: 'Learning React is fun!' } ,
-    {id: 'q2', author: 'Maximilian', text: 'Learning React is great!'}
-];
-
+import useHttp from '../hooks/use-http';
+import { getSingleQuote} from '../lib/api';
+import LoadingSpinner from '../components/UI/LoadingSpinner';
 
 
 export const QuoteDetail = () => {
 
     const params = useParams();
+    const match = useRouteMatch();
 
-    const quote = DUMMY_DATA.find(quote => quote.id === params.quoteId);
+    const { quoteId} = params;
+    const { sendRequest, status, data: loadedQuotes, error} = useHttp(getSingleQuote, true);
 
-    if (!quote) {
-        return <p>No quote found.</p>
+    useEffect(() => {
+        sendRequest(quoteId)
+    }, [sendRequest, quoteId]);
+
+    if (status === 'pending') {
+        return (
+            <div className= 'centered'>
+                <LoadingSpinner />
+            </div>
+        )
     }
+    if (error) {
+        return (
+            <p className='centered'>{error}</p>
+        )
+    }
+    if (!loadedQuotes.text) {
+        return <p>No quote found!</p>
+    }
+    
+    
     return (
         <Fragment>
-            <HighLightedQuote text= {quote.text} author={quote.author}/>
-            <Route path= {`/quotes/${params.quoteId}/comments`}>
+
+            <HighLightedQuote text= {loadedQuotes.text} author={loadedQuotes.author}/>
+            <Route path={match.path} exact>
+                <div className='centered'>
+                    <Link className='btn--flat' to={`${match.url}/comments`}>Load Comments</Link>
+                </div>
+            </Route>
+            <Route path= {`${match.path}/comments`}>
                 <Comments />
             </Route>
         </Fragment>
     )
-}
+};
 
 export default QuoteDetail;
